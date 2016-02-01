@@ -1,5 +1,7 @@
 import argparse
 import logging
+import os
+
 from lib.update_binary_patcher import UpdateBinaryPatcher
 
 logger = logging.getLogger('OpenGAppsPatcher')
@@ -45,6 +47,7 @@ def parse_args():
 
 
 def main(args):
+    args.keystore = os.path.expanduser(args.keystore)
     patcher = UpdateBinaryPatcher(zipfile=args.input_zip,
                                   keystore=args.keystore,
                                   alias=args.alias,

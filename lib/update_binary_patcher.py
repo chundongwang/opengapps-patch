@@ -1,5 +1,5 @@
 import logging
-import subprocess
+from subprocess import check_output, check_call, CalledProcessError
 from lib.zip_patcher import ZipPatcher
 
 logger = logging.getLogger('UpdateBinaryPatcher')
@@ -14,7 +14,7 @@ JARSIGN_FILES = ['META-INF/MANIFEST.MF',
 class UpdateBinaryPatcher(ZipPatcher):
 
     def __init__(self, zipfile, keystore, alias, storepass):
-        super(zipfile)
+        super(UpdateBinaryPatcher, self).__init__(zipfile)
         self.keystore = keystore
         self.alias = alias
         self.storepass = storepass
@@ -38,9 +38,12 @@ class UpdateBinaryPatcher(ZipPatcher):
             logger.error('Cannot sign the zip again. Please make sure you '
                          'have jarsigner installed (mostly part of java '
                          'installation.')
+        except CalledProcessError as e:
+            logger.error('Cannot sign the patched zip. jarsigner exit with '
+                         '{}, output: \n{}'.format(e.returncode, e.output))
 
     def _sign_zip(self):
-        return subprocess.check_output(
+        return check_output(
             'jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 '
             '-keystore {keystore} {target} {alias} -storepass {storepass}'
                 .format(keystore=self.keystore,
@@ -51,7 +54,7 @@ class UpdateBinaryPatcher(ZipPatcher):
         )
 
     def _verify_signature(self):
-        return subprocess.check_call(
+        return check_call(
             'jarsigner -verify -verbose -certs {target}'
                 .format(target=self.zipfile)
                 .split()
