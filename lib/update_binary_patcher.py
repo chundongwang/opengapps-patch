@@ -4,10 +4,10 @@ from lib.zip_patcher import ZipPatcher
 
 logger = logging.getLogger('UpdateBinaryPatcher')
 TARGET_FILE = 'META-INF/com/google/android/update-binary'
-TARGET_LINE = 'df=$(df -k /system | tail -n 1);'
-PATCHED_LINE = 'df=$(busybox df -k /system | tail -n 1);'
-TARGET_LINE_CHMOD = 'chmod +x "$TMP/$f";'
-PATCHED_LINE_CHMOD = 'chmod 755 "$TMP/$f";'
+PATCH_LINES = [('df=$(df -k /system | tail -n 1);',
+                'df=$(busybox df -k /system | tail -n 1);')
+               ('chmod +x "$TMP/$f";',
+                'chmod 755 "$TMP/$f";')]
 JARSIGN_FILES = ['META-INF/MANIFEST.MF',
                  'META-INF/CERT.SF',
                  'META-INF/CERT.RSA']
@@ -27,8 +27,8 @@ class UpdateBinaryPatcher(ZipPatcher):
 
         # patch update-binary
         script_content = self._read_zip(TARGET_FILE)
-        script_content = script_content.replace(TARGET_LINE, PATCHED_LINE)
-        script_content = script_content.replace(TARGET_LINE_CHMOD, PATCHED_LINE_CHMOD)
+        for target, patched in PATCH_LINES:
+            script_content = script_content.replace(target, patched)
         self._replace_zip(filename=TARGET_FILE, new_content=script_content)
 
         # sign again
